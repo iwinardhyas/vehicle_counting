@@ -36,11 +36,12 @@ net = cv2.dnn.readNetFromDarknet(configPath, weightsPath)
 ln = net.getLayerNames()
 ln = [ln[i[0] - 1] for i in net.getUnconnectedOutLayers()]
 
-vs = cv2.VideoCapture('videos/bandung_road5.mp4')
+vs = cv2.VideoCapture('videos/1detik.mp4')
 
 W = None
 H = None
 font = cv2.FONT_HERSHEY_SIMPLEX
+data_json = []
 
 try:
 	prop = cv2.cv.CV_CAP_PROP_FRAME_COUNT if imutils.is_cv2() \
@@ -54,10 +55,10 @@ except:
 
 
 while True:
-	data = receiver.recv()
+	# data = receiver.recv()
 	total_vehicle = []
 	(grabbed, frame) = vs.read()
-	frame = cv2.resize(frame,(640,480))
+	# frame = cv2.resize(frame,(640,480))
 
 	if not grabbed:
 		break
@@ -117,39 +118,42 @@ while True:
 	# 	writer = cv2.VideoWriter(args["output"], fourcc, 30,
 	# 		(frame.shape[1], frame.shape[0]), True)
 
-	total_detect = len(total_vehicle)
-	car = len([p for p in total_vehicle if p == 'car'])
-	truck = len([p for p in total_vehicle if p == 'truck'])
-	bus = len([p for p in total_vehicle if p == 'bus'])
-	motorbike = len([p for p in total_vehicle if p == 'motorbike'])
-	bicycle = len([p for p in total_vehicle if p == 'bicycle'])
-	
-	cv2.rectangle(frame, (10, 275), (300, 400), (180, 132, 109), -1)
-	cv2.putText(frame,'JALAN RAYA PASIR KOJA: ',(10, 285), font,0.5,(0, 0xFF, 0xFF),1,cv2.FONT_HERSHEY_SIMPLEX)
-	cv2.putText(frame, str(data),(10, 300), font,0.5,(0, 0xFF, 0xFF),1,cv2.FONT_HERSHEY_SIMPLEX)
-	cv2.putText(frame,'Detected Vehicles: '+ str(total_detect),(10, 315), font,0.5,(0, 0xFF, 0xFF),1,cv2.FONT_HERSHEY_SIMPLEX)
-	cv2.putText(frame,'Car: '+ str(car),(10, 330), font,0.5,(0, 0xFF, 0xFF),1,cv2.FONT_HERSHEY_SIMPLEX)
-	cv2.putText(frame,'Truck: '+ str(truck),(10, 345), font,0.5,(0, 0xFF, 0xFF),1,cv2.FONT_HERSHEY_SIMPLEX)
-	cv2.putText(frame,'Bus: '+ str(bus),(10, 360), font,0.5,(0, 0xFF, 0xFF),1,cv2.FONT_HERSHEY_SIMPLEX)
-	cv2.putText(frame,'motorbike: '+ str(motorbike),(10, 375), font,0.5,(0, 0xFF, 0xFF),1,cv2.FONT_HERSHEY_SIMPLEX)
-	cv2.putText(frame,'Bicycle: '+ str(bicycle),(10, 390), font,0.5,(0, 0xFF, 0xFF),1,cv2.FONT_HERSHEY_SIMPLEX)
+		total_detect = len(total_vehicle)
+		car = len([p for p in total_vehicle if p == 'car'])
+		truck = len([p for p in total_vehicle if p == 'truck'])
+		bus = len([p for p in total_vehicle if p == 'bus'])
+		motorbike = len([p for p in total_vehicle if p == 'motorbike'])
+		bicycle = len([p for p in total_vehicle if p == 'bicycle'])
+		
+		cv2.rectangle(frame, (10, 275), (300, 400), (180, 132, 109), -1)
+		cv2.putText(frame,'JALAN RAYA PASIR KOJA: ',(10, 285), font,0.5,(0, 0xFF, 0xFF),1,cv2.FONT_HERSHEY_SIMPLEX)
+		# cv2.putText(frame, str(data),(10, 300), font,0.5,(0, 0xFF, 0xFF),1,cv2.FONT_HERSHEY_SIMPLEX)
+		cv2.putText(frame,'Detected Vehicles: '+ str(total_detect),(10, 315), font,0.5,(0, 0xFF, 0xFF),1,cv2.FONT_HERSHEY_SIMPLEX)
+		cv2.putText(frame,'Car: '+ str(car),(10, 330), font,0.5,(0, 0xFF, 0xFF),1,cv2.FONT_HERSHEY_SIMPLEX)
+		cv2.putText(frame,'Truck: '+ str(truck),(10, 345), font,0.5,(0, 0xFF, 0xFF),1,cv2.FONT_HERSHEY_SIMPLEX)
+		cv2.putText(frame,'Bus: '+ str(bus),(10, 360), font,0.5,(0, 0xFF, 0xFF),1,cv2.FONT_HERSHEY_SIMPLEX)
+		cv2.putText(frame,'motorbike: '+ str(motorbike),(10, 375), font,0.5,(0, 0xFF, 0xFF),1,cv2.FONT_HERSHEY_SIMPLEX)
+		cv2.putText(frame,'Bicycle: '+ str(bicycle),(10, 390), font,0.5,(0, 0xFF, 0xFF),1,cv2.FONT_HERSHEY_SIMPLEX)
 
-	data = {
-		"street": 'JALAN RAYA PASIR KOJA KOTA BANDUNG',
-		"sensors": [str(data)],
-		"vehicle_detection": [{"total_detect": total_detect,
-		"car": car,
-		"truck": truck,
-		"bus": bus,
-		"motorbike": motorbike,
-		"bicycle": bicycle}]
-	}
+		data = {
+			"street": 'JALAN RAYA PASIR KOJA KOTA BANDUNG',
+			# "sensors": [str(data)],
+			"vehicle_detection": [{"total_detect": total_detect,
+			"car": car,
+			"truck": truck,
+			"bus": bus,
+			"motorbike": motorbike,
+			"bicycle": bicycle}]
+		}
 
+	data_json.append(data)
 	print(json.dumps(data, indent=4))
 	cv2.imshow("Preview",frame)
 	key = cv2.waitKey(1) & 0xFF
 	
 	if key == ord("q"):
 		break
+	with open('data.json', 'w', encoding='utf-8') as f:
+		json.dump(data_json, f, ensure_ascii=False, indent=4)
 
 vs.release()
